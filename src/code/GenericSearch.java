@@ -53,7 +53,7 @@ public abstract class GenericSearch {
 	}
 
 	// This method reconstructs the solution path once the goal is reached
-	protected String constructSolution(Node node) {
+	protected String constructSolution(Node node,int ex) {
 		List<String> actions = new ArrayList<>();
 		int pathCost = node.pathCost;
 
@@ -63,6 +63,6 @@ public abstract class GenericSearch {
 		}
 
 		Collections.reverse(actions);
-		return String.join(",", actions) + ";" + pathCost + ";NODES_EXPANDED";
+		return String.join(",", actions) + ";" + pathCost + ";"+ex;
 	}
 }

@@ -29,10 +29,13 @@ public class Bottle implements Cloneable {
         if (!i.stack.isEmpty() && this.stack.peek() != i.stack.peek()) {
             return -1;
         }
-        
-        while(!this.stack.isEmpty() && !i.isFull() && (i.stack.isEmpty() || this.stack.peek() == i.stack.peek() ))
+        int x=0;
+        while(!this.stack.isEmpty() && !i.isFull() && (i.stack.isEmpty() || this.stack.peek() == i.stack.peek() )) {
         	i.stack.push(this.stack.pop());
-        return 0;
+        	x++;
+        }
+        	
+        return x;
     }
 
     public boolean isSameColor() {
@@ -76,21 +79,21 @@ public class Bottle implements Cloneable {
     }
 
     public boolean isEmpty() {
-        boolean flag = true;
-        Stack<Character> copy = new Stack<>();
-        
-        while (!this.stack.isEmpty()) {
-            if (this.stack.peek() != 'e') {
-                flag = false;
-            }
-            copy.push(this.stack.pop());
-        }
-        
-        while (!copy.isEmpty()) {
-            this.stack.push(copy.pop());
-        }
-        return flag;
-    }
+//        boolean flag = true;
+//        Stack<Character> copy = new Stack<>();
+//        
+//        while (!this.stack.isEmpty()) {
+//            if (this.stack.peek() != 'e') {
+//                flag = false;
+//            }
+//            copy.push(this.stack.pop());
+//        }
+//        
+//        while (!copy.isEmpty()) {
+//            this.stack.push(copy.pop());
+//        }
+//        return flag;
+    	return this.stack.isEmpty();    }
 
     // Getter for stack (if needed)
     public Stack<Character> getStack() {

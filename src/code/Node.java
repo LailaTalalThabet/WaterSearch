@@ -14,4 +14,12 @@ public class Node {
         this.pathCost = pathCost;
         this.depth = depth;
     }
+    public String toStringState() {
+    	String s="";
+    	for(Bottle b:state) {
+    		s=s+b.toString()+";";
+    	}
+    	return s;
+    	
+    }
 }

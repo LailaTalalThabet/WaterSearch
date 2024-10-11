@@ -3,31 +3,40 @@ package code;
 import java.util.*;
 
 public class WaterSortSearch extends GenericSearch {
-	private int numberOfBottles;
-	private int bottleCapacity;
-	private Bottle[] initialState;
+	private static int numberOfBottles;
+	private static int bottleCapacity;
+	private static Bottle[] initialState;
 
-	public WaterSortSearch(String s) {
+	public WaterSortSearch() {
+		
+	}
+public static String solve(String state,String strategy,Boolean visualize) {
 
-		String[] parts = s.split(";");
-		numberOfBottles = Integer.parseInt(parts[0]);
-		bottleCapacity = Integer.parseInt(parts[1]);
-		initialState = new Bottle[numberOfBottles];
-		for (int i = 0; i < numberOfBottles; i++) {
-			String[] letters = (parts[i + 2]).split(",");
-			Stack<Character> st = new Stack<>();
-			for (int j = bottleCapacity - 1; j >= 0; j--) {
-				if (letters[j].charAt(0) != 'e')
-					st.push(letters[j].charAt(0));
-			}
 
-			Bottle b = new Bottle(bottleCapacity, st);
-			initialState[i] = b;
-
+	String[] parts = state.split(";");
+	numberOfBottles = Integer.parseInt(parts[0]);
+	bottleCapacity = Integer.parseInt(parts[1]);
+	initialState = new Bottle[numberOfBottles];
+	for (int i = 0; i < numberOfBottles; i++) {
+		String[] letters = (parts[i + 2]).split(",");
+		Stack<Character> st = new Stack<>();
+		// we do not enter the letter 'e' we instead leave an empty spot
+		for (int j = bottleCapacity - 1; j >= 0; j--) {
+			if (letters[j].charAt(0) != 'e')
+				st.push(letters[j].charAt(0));
 		}
+
+		Bottle b = new Bottle(bottleCapacity, st);
+		initialState[i] = b;
 
 	}
 
+
+	WaterSortSearch w = new WaterSortSearch();
+	
+	return w.search(initialState,strategy);
+	
+}
 	// Method to parse the initial state string
 
 	@Override
@@ -36,7 +45,7 @@ public class WaterSortSearch extends GenericSearch {
 		case "BF":
 			return bfs(initialState);
 		case "DF":
-			return bfs(initialState);
+			return dfs(initialState);
 
 		default:
 			return "Invalid Strategy";
@@ -45,32 +54,48 @@ public class WaterSortSearch extends GenericSearch {
 
 	private String bfs(Bottle[] initialState) {
 		Queue<Node> frontier = new LinkedList<>();
-		Set<Bottle[]> explored = new HashSet<>();
+		Map<String, Node> explored = new HashMap<>();
+		int ex=0;
 
 		Node root = new Node(initialState, null, null, 0, 0);
 		frontier.add(root);
+		
 
 		while (!frontier.isEmpty()) {
 
 			Node node = frontier.poll();
 
 			if (isGoal(node.state)) {
-				return constructSolution(node);
+				return constructSolution(node,ex);
 			}
 
-			explored.add(node.state);
+			ex++;
 
 			for (String action : getActions(node.state)) {
-				System.out.println(action);
+				
 
 				Bottle[] newState = new Bottle[node.state.length];
 				for (int i = 0; i < node.state.length; i++)
 					newState[i] = (Bottle) node.state[i].clone();
 
-				newState[action.charAt(5) - '0'].pour(newState[action.charAt(7) - '0']);
-				if (!explored.contains(newState)) {
-					Node child = new Node(newState, node, action, node.pathCost + 1, node.depth + 1);
-					frontier.add(child);
+				int x=newState[action.charAt(5) - '0'].pour(newState[action.charAt(7) - '0']);
+
+				
+				Node Child=new Node(newState,node,action,node.pathCost + x,node.depth + 1);
+				String stateKey = Child.toStringState();
+				if (explored.containsKey(stateKey)) {
+					Node existingNode = explored.get(stateKey);
+					if (Child.pathCost < existingNode.pathCost) {
+	                    // Replace the existing node with the new one if it's cheaper
+	                    explored.put(stateKey, Child);
+	                    frontier.add(Child); // Add the new node to the frontier
+	                }
+					
+				}
+				else {
+					frontier.add(Child);
+					explored.put(Child.toStringState(), Child);
+					
 				}
 			}
 			
@@ -79,51 +104,61 @@ public class WaterSortSearch extends GenericSearch {
 		return "NOSOLUTION";
 	}
 	private String dfs(Bottle[] initialState) {
-	    Stack<Node> frontier = new Stack<>(); // Use Stack for DFS
-	    Set<Bottle[]> explored = new HashSet<>(); // Set to track explored states
+		LinkedList<Node> frontier = new LinkedList<>();
+		Map<String, Node> explored = new HashMap<>();
+		
+		int ex=0;
 
-	    Node root = new Node(initialState, null, null, 0, 0);
-	    frontier.push(root); // Push the root node onto the stack
+		Node root = new Node(initialState, null, null, 0, 0);
+		frontier.addFirst(root);
+		explored.put(root.toStringState(), root);
+		
 
-	    while (!frontier.isEmpty()) {
-	        Node node = frontier.pop(); // Pop the top node from the stack
+		while (!frontier.isEmpty()) {
 
-	        if (isGoal(node.state)) {
-	            return constructSolution(node); // Goal found
-	        }
+			Node node =frontier.removeFirst();
+			
 
-	        explored.add(node.state); // Mark the current state as explored
+			if (isGoal(node.state)) {
+				return constructSolution(node,ex);
+			}
 
-	        // Iterate through all possible actions from the current state
-	        for (String action : getActions(node.state)) {
-	            System.out.println(action);
+			ex++;
 
-	            // Create a new state by cloning the current state
-	            Bottle[] newState = new Bottle[node.state.length];
-	            for (int i = 0; i < node.state.length; i++) {
-	                newState[i] = (Bottle) node.state[i].clone(); // Clone each Bottle
-	            }
+			for (String action : getActions(node.state)) {
+				
 
-	            // Perform the action
-	            newState[action.charAt(5) - '0'].pour(newState[action.charAt(7) - '0']);
-	            
-	            // Check if the new state has not been explored
-	            if (!explored.contains(newState)) {
-	                Node child = new Node(newState, node, action, node.pathCost + 1, node.depth + 1);
-	                frontier.push(child); // Push the new node onto the stack
-	            }
-	        }
-	    }
+				Bottle[] newState = new Bottle[node.state.length];
+				for (int i = 0; i < node.state.length; i++)
+					newState[i] = (Bottle) node.state[i].clone();
 
-	    return "NOSOLUTION"; // Return if no solution is found
+				int x=newState[action.charAt(5) - '0'].pour(newState[action.charAt(7) - '0']);				
+				Node Child=new Node(newState,node,action,node.pathCost + x,node.depth + 1);
+				String stateKey = Child.toStringState();
+				if (explored.containsKey(stateKey)) {
+					Node existingNode = explored.get(stateKey);
+					if (Child.pathCost < existingNode.pathCost) {
+	                    // Replace the existing node with the new one if it's cheaper
+	                    explored.put(stateKey, Child);
+	                    frontier.addFirst(Child); // Add the new node to the frontier
+	                }
+					
+				}
+				else {
+					frontier.addFirst(Child);
+					explored.put(Child.toStringState(), Child);
+					
+				}
+				
+			}
+			
+		}
+
+		return "NOSOLUTION";
 	}
+	
 
 
-	public static void main(String[] args) {
-		String init = "5;4;" + "b,y,r,b;" + "b,y,r,r;" + "y,r,b,y;" + "e,e,e,e;" + "e,e,e,e;";
-		WaterSortSearch w = new WaterSortSearch(init);
-		System.out.print(w.search(w.initialState, "DF"));
-
-	}
+	
 
 }
